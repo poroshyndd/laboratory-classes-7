@@ -1,15 +1,14 @@
-const Product = require("../models/Product");
-const Cart = require("../models/Cart");
+const Cart = require('../models/Cart');
 
-const { STATUS_CODE } = require("../constants/statusCode");
-
-exports.addProductToCart = (request, response) => {
-  Product.add(request.body);
-  Cart.add(request.body.name);
-
-  response.status(STATUS_CODE.FOUND).redirect("/products/new");
-};
-
-exports.getProductsCount = () => {
-  return Cart.getProductsQuantity();
+exports.getProductsCount = async function(cartId = 'default') {
+  try {
+    const cart = await new Cart(cartId).getCart();
+    if (!cart || !Array.isArray(cart.items)) {
+      return 0;
+    }
+    return cart.items.reduce((total, item) => total + item.quantity, 0);
+  } catch (err) {
+    console.error('Error fetching cart count:', err);
+    return 0;
+  }
 };
