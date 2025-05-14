@@ -1,34 +1,47 @@
+const { getDatabase } = require('../database');
+const COLLECTION_NAME = 'products';
+
 class Product {
-  constructor(name, description, price) {
-    this.name = name;
-    this.description = description;
+  constructor(title, price, id) {
+    this.title = title;
     this.price = price;
+    this.id = id;
   }
 
-  static #products = [];
-
-  static getAll() {
-    return this.#products;
+  save() {
+    const db = getDatabase();
+    return db.collection(COLLECTION_NAME)
+      .findOne({ _id: this.id })
+      .then(existing => {
+        if (existing) {
+          return db.collection(COLLECTION_NAME)
+            .updateOne(
+              { _id: this.id },
+              { $set: { title: this.title, price: this.price } }
+            );
+        }
+        return db.collection(COLLECTION_NAME)
+          .insertOne({ _id: this.id, title: this.title, price: this.price });
+      });
   }
 
-  static add(product) {
-    this.#products.push(product);
+  static fetchAll() {
+    const db = getDatabase();
+    return db.collection(COLLECTION_NAME)
+      .find()
+      .toArray();
   }
 
-  static findByName(name) {
-    return this.#products.find((product) => product.name === name);
+  static findById(prodId) {
+    const db = getDatabase();
+    return db.collection(COLLECTION_NAME)
+      .findOne({ _id: prodId });
   }
 
-  static deleteByName(name) {
-    this.#products = this.#products.filter((product) => product.name !== name);
-  }
-
-  static getLast() {
-    if (!this.#products.length) {
-      return;
-    }
-
-    return this.#products[this.#products.length - 1];
+  static deleteById(prodId) {
+    const db = getDatabase();
+    return db.collection(COLLECTION_NAME)
+      .deleteOne({ _id: prodId });
   }
 }
 
